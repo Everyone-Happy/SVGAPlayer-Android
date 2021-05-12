@@ -270,6 +270,10 @@ class SVGAVideoEntity {
         SoundPool(12.coerceAtMost(entity.audios.count()), AudioManager.STREAM_MUSIC, 0)
     }
 
+    fun getImage(bitmapKey: String): Bitmap? {
+        return imageMap[bitmapKey]
+    }
+
     fun clear() {
         soundPool?.release()
         soundPool = null

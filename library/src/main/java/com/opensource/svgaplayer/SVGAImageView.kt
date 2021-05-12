@@ -6,11 +6,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
-import android.widget.ImageView
+import androidx.appcompat.widget.AppCompatImageView
 import com.opensource.svgaplayer.utils.SVGARange
 import com.opensource.svgaplayer.utils.log.LogUtils
 import java.lang.ref.WeakReference
@@ -20,7 +19,7 @@ import java.net.URL
  * Created by PonyCui on 2017/3/29.
  */
 open class SVGAImageView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : ImageView(context, attrs, defStyleAttr) {
+    : AppCompatImageView(context, attrs, defStyleAttr) {
 
     private val TAG = "SVGAImageView"
 
