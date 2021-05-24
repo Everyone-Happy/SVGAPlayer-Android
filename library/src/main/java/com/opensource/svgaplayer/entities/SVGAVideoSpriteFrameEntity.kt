@@ -9,7 +9,7 @@ import org.json.JSONObject
 /**
  * Created by cuiminghui on 2016/10/17.
  */
-internal class SVGAVideoSpriteFrameEntity {
+class SVGAVideoSpriteFrameEntity {
 
     var alpha: Double
     var layout = SVGARect(0.0, 0.0, 0.0, 0.0)

@@ -6,7 +6,7 @@ import org.json.JSONObject
 /**
  * Created by cuiminghui on 2016/10/17.
  */
-internal class SVGAVideoSpriteEntity {
+class SVGAVideoSpriteEntity {
 
     val imageKey: String?
 

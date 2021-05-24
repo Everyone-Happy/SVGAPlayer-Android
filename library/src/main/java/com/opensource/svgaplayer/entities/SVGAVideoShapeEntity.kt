@@ -15,7 +15,7 @@ import java.util.*
 
 val sharedPath = Path()
 
-internal class SVGAVideoShapeEntity {
+class SVGAVideoShapeEntity {
 
     enum class Type {
         shape,

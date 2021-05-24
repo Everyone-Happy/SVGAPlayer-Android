@@ -270,8 +270,16 @@ class SVGAVideoEntity {
         SoundPool(12.coerceAtMost(entity.audios.count()), AudioManager.STREAM_MUSIC, 0)
     }
 
+    fun getImages(): Map<String, Bitmap?> = imageMap
+
     fun getImage(bitmapKey: String): Bitmap? {
         return imageMap[bitmapKey]
+    }
+
+    fun getSprites(): List<SVGAVideoSpriteEntity> = spriteList
+
+    fun getSprite(index: Int): SVGAVideoSpriteEntity {
+        return spriteList[index]
     }
 
     fun clear() {
