@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.http.HttpResponseCache
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import com.opensource.svgaplayer.proto.MovieEntity
 import com.opensource.svgaplayer.utils.log.LogUtils
 import org.json.JSONObject
@@ -24,7 +23,7 @@ import java.util.zip.ZipInputStream
 private var fileLock: Int = 0
 private var isUnzipping = false
 
-class SVGAParser(context: Context?) {
+class SVGAParser @JvmOverloads constructor(context: Context?, var fileDownloader: FileDownloader = FileDownloaderImpl()) {
     private var mContext = context?.applicationContext
 
     init {
@@ -42,11 +41,22 @@ class SVGAParser(context: Context?) {
         fun onError()
     }
 
-    open class FileDownloader {
+    interface FileDownloader {
+        /**
+         * SVGA 文件下载器
+         * @param url 文件下载链接
+         * @param complete 下载完成回调，特别注意：需要全部下载完成后！！
+         * @param failure 下载失败回调
+         * @return 可以取消下载的callable
+         */
+        fun resume(url: URL, complete: (inputStream: InputStream) -> Unit, failure: (e: Exception) -> Unit): () -> Unit
+    }
+
+    open class FileDownloaderImpl : FileDownloader {
 
         var noCache = false
 
-        open fun resume(url: URL, complete: (inputStream: InputStream) -> Unit, failure: (e: Exception) -> Unit): () -> Unit {
+        override fun resume(url: URL, complete: (inputStream: InputStream) -> Unit, failure: (e: Exception) -> Unit): () -> Unit {
             var cancelled = false
             val cancelBlock = {
                 cancelled = true
@@ -98,8 +108,6 @@ class SVGAParser(context: Context?) {
             return cancelBlock
         }
     }
-
-    var fileDownloader = FileDownloader()
 
     companion object {
         private const val TAG = "SVGAParser"
@@ -166,7 +174,7 @@ class SVGAParser(context: Context?) {
             return null
         } else {
             LogUtils.info(TAG, "no cached, prepare to download")
-            fileDownloader.resume(url, {
+           fileDownloader.resume(url, {
                 if (SVGACache.isDefaultCache()) {
                     this.decodeFromInputStream(it, cacheKey, callback)
                 } else {
