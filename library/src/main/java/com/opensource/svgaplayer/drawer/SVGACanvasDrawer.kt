@@ -3,11 +3,11 @@ package com.opensource.svgaplayer.drawer
 import android.graphics.*
 import android.os.Build
 import android.text.*
+import android.text.StaticLayout
 import android.widget.ImageView
 import com.opensource.svgaplayer.SVGADynamicEntity
 import com.opensource.svgaplayer.SVGAVideoEntity
 import com.opensource.svgaplayer.entities.SVGAVideoShapeEntity
-import java.lang.Exception
 
 /**
  * Created by cuiminghui on 2017/3/29.
@@ -241,14 +241,15 @@ internal class SVGACanvasDrawer(videoItem: SVGAVideoEntity, val dynamicItem: SVG
                     textBitmap = it
                 } ?: kotlin.run {
                     textBitmap = Bitmap.createBitmap(drawingBitmap.width, drawingBitmap.height, Bitmap.Config.ARGB_8888)
-                    val drawRect = Rect(0, 0, drawingBitmap.width, drawingBitmap.height)
                     val textCanvas = Canvas(textBitmap!!)
                     drawingTextPaint.isAntiAlias = true
-                    val fontMetrics = drawingTextPaint.getFontMetrics();
-                    val top = fontMetrics.top
-                    val bottom = fontMetrics.bottom
-                    val baseLineY = drawRect.centerY() - top/2 - bottom/2
-                    textCanvas.drawText(drawingText, drawRect.centerX().toFloat(),baseLineY,drawingTextPaint);
+                    val bounds = Rect()
+                    drawingTextPaint.getTextBounds(drawingText, 0, drawingText.length, bounds)
+                    val x = (drawingBitmap.width - bounds.width()) / 2.0
+                    val targetRectTop = 0
+                    val targetRectBottom = drawingBitmap.height
+                    val y = (targetRectBottom + targetRectTop - drawingTextPaint.fontMetrics.bottom - drawingTextPaint.fontMetrics.top) / 2
+                    textCanvas.drawText(drawingText, x.toFloat(), y, drawingTextPaint)
                     drawTextCache.put(imageKey, textBitmap as Bitmap)
                 }
             }
