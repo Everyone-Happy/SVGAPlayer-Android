@@ -27,7 +27,7 @@ class SVGAParser @JvmOverloads constructor(context: Context?, var fileDownloader
     private var mContext = context?.applicationContext
 
     init {
-        SVGACache.onCreate(context)
+        SVGACache.onCreate(context, SVGACache.Type.FILE)
     }
 
     @Volatile
@@ -130,7 +130,7 @@ class SVGAParser @JvmOverloads constructor(context: Context?, var fileDownloader
 
     fun init(context: Context) {
         mContext = context.applicationContext
-        SVGACache.onCreate(mContext)
+        SVGACache.onCreate(mContext, SVGACache.Type.FILE)
     }
 
     fun setFrameSize(frameWidth: Int, frameHeight: Int) {

@@ -24,14 +24,11 @@ object SVGACache {
             return field
         }
 
-    fun onCreate(context: Context?) {
-        onCreate(context, Type.DEFAULT)
-    }
-
     fun onCreate(context: Context?, type: Type) {
         if (isInitialized()) return
         context ?: return
-        cacheDir = "${context.cacheDir.absolutePath}/svga/"
+        val parent = context.externalCacheDir ?: context.cacheDir
+        cacheDir = "${parent.absolutePath}/svga/"
         File(cacheDir).takeIf { !it.exists() }?.mkdirs()
         this.type = type
     }
