@@ -51,7 +51,7 @@ public class AnimationFromClickActivity extends Activity {
                 animationView.startAnimation();
             }
             @Override
-            public void onError() {
+            public void onError(Throwable e) {
 
             }
         });

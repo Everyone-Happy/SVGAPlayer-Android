@@ -89,7 +89,7 @@ open class SVGAImageView @JvmOverloads constructor(context: Context, attrs: Attr
                 ref.get()?.startAnimation(videoItem)
             }
 
-            override fun onError() {}
+            override fun onError(e: Throwable) {}
         }
     }
 
