@@ -38,7 +38,7 @@ class SVGAParser @JvmOverloads constructor(context: Context?, var fileDownloader
 
     interface ParseCompletion {
         fun onComplete(videoItem: SVGAVideoEntity)
-        fun onError()
+        fun onError(e: Throwable)
     }
 
     interface FileDownloader {
@@ -199,15 +199,20 @@ class SVGAParser @JvmOverloads constructor(context: Context?, var fileDownloader
                         LogUtils.info(TAG, "cache.inflate start")
                         inflate(bytes)?.let { inflateBytes ->
                             LogUtils.info(TAG, "cache.inflate success")
-                            val videoItem = SVGAVideoEntity(
-                                    MovieEntity.ADAPTER.decode(inflateBytes),
-                                    File(cacheKey),
-                                    mFrameWidth,
-                                    mFrameHeight
-                            )
-                            videoItem.prepare {
-                                LogUtils.info(TAG, "cache.prepare success")
-                                this.invokeCompleteCallback(videoItem, callback)
+                            try {
+                                val videoItem = SVGAVideoEntity(
+                                        MovieEntity.ADAPTER.decode(inflateBytes),
+                                        File(cacheKey),
+                                        mFrameWidth,
+                                        mFrameHeight
+                                )
+                                videoItem.prepare {
+                                    LogUtils.info(TAG, "cache.prepare success")
+                                    this.invokeCompleteCallback(videoItem, callback)
+                                }
+                            } catch (e: StackOverflowError) {
+                                LogUtils.error(TAG, "StackOverflowError occurred during SVGA parsing from cache file", e)
+                                this.invokeErrorCallback(e, callback)
                             }
                         } ?: doError("cache.inflate(bytes) cause exception", callback)
                     } ?: doError("cache.readAsBytes(inputStream) cause exception", callback)
@@ -258,20 +263,25 @@ class SVGAParser @JvmOverloads constructor(context: Context?, var fileDownloader
                     LogUtils.info(TAG, "Input.inflate start")
                     inflate(bytes)?.let { inflateBytes ->
                         LogUtils.info(TAG, "Input.inflate success")
-                        val videoItem = SVGAVideoEntity(
-                                MovieEntity.ADAPTER.decode(inflateBytes),
-                                File(cacheKey),
-                                mFrameWidth,
-                                mFrameHeight
-                        )
-                        // 里面soundPool如果解析时load同一个svga的声音文件会出现无回调的情况,导致这里的callback不执行,
-                        // 原因暂时未知.目前解决方案是公开imageview,drawable,entity的clear(),然后在播放带声音
-                        // 的svgaimageview处,把解析完的drawable或者entity缓存下来,下次直接播放.用完再调用clear()
-                        // 在ImageView添加clearsAfterDetached,用于控制imageview在onDetach的时候是否要自动调用clear.
-                        // 以暂时缓解需要为RecyclerView缓存drawable或者entity的人士.用完记得调用clear()
-                        videoItem.prepare {
-                            LogUtils.info(TAG, "Input.prepare success")
-                            this.invokeCompleteCallback(videoItem, callback)
+                        try {
+                            val videoItem = SVGAVideoEntity(
+                                    MovieEntity.ADAPTER.decode(inflateBytes),
+                                    File(cacheKey),
+                                    mFrameWidth,
+                                    mFrameHeight
+                            )
+                            // 里面soundPool如果解析时load同一个svga的声音文件会出现无回调的情况,导致这里的callback不执行,
+                            // 原因暂时未知.目前解决方案是公开imageview,drawable,entity的clear(),然后在播放带声音
+                            // 的svgaimageview处,把解析完的drawable或者entity缓存下来,下次直接播放.用完再调用clear()
+                            // 在ImageView添加clearsAfterDetached,用于控制imageview在onDetach的时候是否要自动调用clear.
+                            // 以暂时缓解需要为RecyclerView缓存drawable或者entity的人士.用完记得调用clear()
+                            videoItem.prepare {
+                                LogUtils.info(TAG, "Input.prepare success")
+                                this.invokeCompleteCallback(videoItem, callback)
+                            }
+                        } catch (e: StackOverflowError) {
+                            LogUtils.error(TAG, "StackOverflowError occurred during SVGA parsing from input stream", e)
+                            this.invokeErrorCallback(e, callback)
                         }
                     } ?: doError("Input.inflate(bytes) cause exception", callback)
                 } ?: doError("Input.readAsBytes(inputStream) cause exception", callback)
@@ -338,6 +348,8 @@ class SVGAParser @JvmOverloads constructor(context: Context?, var fileDownloader
                 )
             } catch (e: java.lang.Exception) {
                 this.invokeErrorCallback(e, callback)
+            } catch (error: StackOverflowError) {
+                this.invokeErrorCallback(error, callback)
             } finally {
                 if (closeInputStream) {
                     inputStream.close()
@@ -377,12 +389,12 @@ class SVGAParser @JvmOverloads constructor(context: Context?, var fileDownloader
         }
     }
 
-    private fun invokeErrorCallback(e: java.lang.Exception, callback: ParseCompletion?) {
+    private fun invokeErrorCallback(e: Throwable, callback: ParseCompletion?) {
         e.printStackTrace()
         LogUtils.error(TAG, "================ parser error ================")
         LogUtils.error(TAG, "error", e)
         Handler(Looper.getMainLooper()).post {
-            callback?.onError()
+            callback?.onError(e)
         }
     }
 
@@ -407,6 +419,11 @@ class SVGAParser @JvmOverloads constructor(context: Context?, var fileDownloader
                     cacheDir.delete()
                     binaryFile.delete()
                     throw e
+                } catch (error: StackOverflowError) {
+                    LogUtils.error(TAG, "binary change to entity fail", error)
+                    cacheDir.delete()
+                    binaryFile.delete()
+                    throw error
                 }
             }
             File(cacheDir, "movie.spec").takeIf { it.isFile }?.let { jsonFile ->
@@ -435,10 +452,17 @@ class SVGAParser @JvmOverloads constructor(context: Context?, var fileDownloader
                     cacheDir.delete()
                     jsonFile.delete()
                     throw e
+                } catch (error: StackOverflowError) {
+                    LogUtils.error(TAG, "spec change to entity fail", error)
+                    cacheDir.delete()
+                    jsonFile.delete()
+                    throw error
                 }
             }
         } catch (e: Exception) {
             this.invokeErrorCallback(e, callback)
+        } catch (error: StackOverflowError) {
+            this.invokeErrorCallback(error, callback)
         }
     }
 

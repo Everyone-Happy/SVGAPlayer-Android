@@ -5,6 +5,7 @@ buildscript {
     repositories {
         google()
         jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.0'
@@ -17,7 +18,14 @@ buildscript {
 
 allprojects {
     repositories {
+        // 添加阿里云镜像仓库
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+        
+        // 原有仓库
         jcenter()
         google()
+        mavenCentral()
     }
 }
